@@ -16,6 +16,7 @@ public class FileManager {
     }
     private void writeString(String string, int stringCapacity, RandomAccessFile raf) throws IOException {
         StringBuilder stringBuilder = new StringBuilder(stringCapacity);
+        stringBuilder.append(string);
         for (int i = string.length(); i < stringCapacity; i++) {
             stringBuilder.append('\0');
         }

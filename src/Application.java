@@ -22,6 +22,21 @@ public class Application {
             return null;
         return fileManager.readRecord(pos);
     }
+    public List<Computer> readAllComputers() {
+        return fileManager.readAllRecords();
+    }
+    public boolean addComputer(Computer computer) {
+        table.put(computer.getSerialNumber(), table.size() - 1);
+        return fileManager.writeRecord(computer);
+    }
+    public boolean addComputers(List<Computer> computers) {
+        int i = 0;
+        for (Computer computer : computers) {
+            table.put(computer.getSerialNumber(), table.size() + i - 1);
+            i++;
+        }
+        return fileManager.writeRecords(computers);
+    }
     public List<Computer> getComputersWithEnoughRam(int ramCapacity) {
         List<Computer> computers = fileManager.readAllRecords();
         ArrayList<Computer> computersWithEnoughRam = new ArrayList<>(computers.size());
@@ -34,6 +49,7 @@ public class Application {
     public List<Computer> getComputersSorted() {
         List<Computer> computers = fileManager.readAllRecords();
         Collections.sort(computers);
+        fileManager.overwriteRecords(computers);
         return computers;
     }
 }

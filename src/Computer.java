@@ -1,6 +1,6 @@
 public class Computer implements Comparable<Computer>{
     public static final int
-        STRING_LENGTH = 30,
+        STRING_LENGTH = 60,
         SERIAL_NUMBER_LENGTH = 10,
         RECORD_LENGTH = 3 * (STRING_LENGTH * Character.BYTES) + SERIAL_NUMBER_LENGTH * Character.BYTES + 3 * Integer.BYTES;
     private String marca, modello, serialNumber, processore;
@@ -86,6 +86,19 @@ public class Computer implements Comparable<Computer>{
 
     @Override
     public int compareTo(Computer computer) {
-        return this.marca.compareToIgnoreCase(computer.marca);
+        return marca.compareToIgnoreCase(computer.marca);
+    }
+
+    @Override
+    public String toString() {
+        return "Computer{" +
+                "marca='" + marca + '\'' +
+                ", modello='" + modello + '\'' +
+                ", serialNumber='" + serialNumber + '\'' +
+                ", processore='" + processore + '\'' +
+                ", annoDiProduzione=" + annoDiProduzione +
+                ", ramCapacity=" + ramCapacity +
+                ", storageCapacity=" + storageCapacity +
+                '}';
     }
 }
