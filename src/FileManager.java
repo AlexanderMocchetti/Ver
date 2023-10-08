@@ -1,22 +1,9 @@
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.List;
 
-/*
- Si realizzi un programma per la gestione di un file ad accesso diretto nel linguaggio Java.
- Il file conterrà un elenco di studenti, ogni record studente sarà composto dai seguenti campi: (2 punti)
-- ID
-- Nome
-- Cognome
-- Data di nascita
-- Classe
-- Frequentante (vero o falso)
-Il programma deve permettere di:
-1. Scrivere un record nel file (2 punti)
-2. Leggere un record specifico indicando la posizione(2 punti)
-3. Visualizzare il numero di record/studenti presente nel file (1 punto)
-4. Modificare un record specifico indicando la posizione (si decida a piacere cosa modificare) (2 punti)
-*/
 public class FileManager {
     private File file;
     public FileManager(String filePath) {
@@ -25,48 +12,60 @@ public class FileManager {
     public int getNumberOfRecords() {
         if (!file.exists())
             return -1;
-        return (int) (file.length() / Student.RECORD_LENGTH);
+        return (int) file.length() / Computer.RECORD_LENGTH;
     }
-    public boolean writeRecord(Student student) {
+    private void writeString(String string, int stringCapacity, RandomAccessFile raf) throws IOException {
+        StringBuilder stringBuilder = new StringBuilder(stringCapacity);
+        for (int i = string.length(); i < stringCapacity; i++) {
+            stringBuilder.append('\0');
+        }
+        raf.writeChars(stringBuilder.toString());
+    }
+    private void writeRecord(Computer computer, RandomAccessFile raf) throws IOException {
+        writeString(computer.getMarca(), Computer.STRING_LENGTH, raf);
+        writeString(computer.getModello(), Computer.STRING_LENGTH, raf);
+        raf.writeInt(computer.getAnnoDiProduzione());
+        writeString(computer.getProcessore(), Computer.STRING_LENGTH, raf);
+        raf.writeInt(computer.getRamCapacity());
+        raf.writeInt(computer.getStorageCapacity());
+        writeString(computer.getSerialNumber(), Computer.SERIAL_NUMBER_LENGTH, raf);
+    }
+    public boolean writeRecord(Computer computer) {
         try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
             raf.seek(raf.length());
-            raf.writeInt(student.getId());
-            writeString(student.getFirstName(), Student.NAME_LENGTH, raf);
-            writeString(student.getLastName(), Student.NAME_LENGTH, raf);
-            writeString(student.getGrade(), Student.GRADE_LENGTH, raf);
-            writeString(student.getDateOfBirth(), Student.DATE_OF_BIRTH_LENGTH, raf);
-            raf.writeBoolean(student.isFrequentante());
+            writeRecord(computer, raf);
             return true;
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
     }
-    private void writeString(String string, int stringCapacity, RandomAccessFile raf) throws IOException {
-        StringBuilder stringBuilder = new StringBuilder(stringCapacity);
-        stringBuilder.append(string);
-        for (int i = string.length(); i < stringCapacity; i++) {
-            stringBuilder.append('\0');
+    private void writeRecords(List<Computer> computers, RandomAccessFile raf) throws IOException {
+        for (Computer computer : computers) {
+            writeRecord(computer, raf);
         }
-        raf.writeChars(stringBuilder.toString());
     }
-    public Student readRecord(int index) {
+    public boolean writeRecords(List<Computer> computers) {
         try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
-            raf.seek((long) Student.RECORD_LENGTH * index);
-            Student student = new Student();
-            student.setId(raf.readInt());
-            student.setFirstName(readString(Student.NAME_LENGTH, raf));
-            student.setLastName(readString(Student.NAME_LENGTH, raf));
-            student.setGrade(readString(Student.GRADE_LENGTH, raf));
-            student.setDateOfBirth(readString(Student.DATE_OF_BIRTH_LENGTH, raf));
-            student.setFrequentante(raf.readBoolean());
-            return student;
+            raf.seek(raf.length());
+            writeRecords(computers, raf);
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
+            return false;
         }
     }
-    private String readString(int stringCapacity, RandomAccessFile raf) throws IOException{
+    public boolean overwriteRecords(List<Computer> computers) {
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+            raf.setLength(0L);
+            writeRecords(computers, raf);
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    private String readString(int stringCapacity, RandomAccessFile raf) throws IOException {
         StringBuilder stringBuilder = new StringBuilder(stringCapacity);
         char ch;
         for (int i = 0; i < stringCapacity; i++) {
@@ -75,5 +74,40 @@ public class FileManager {
                 stringBuilder.append(ch);
         }
         return stringBuilder.toString();
+    }
+    private Computer readRecord(RandomAccessFile raf) throws IOException {
+        Computer computer = new Computer();
+        computer.setMarca(readString(Computer.STRING_LENGTH, raf));
+        computer.setModello(readString(Computer.STRING_LENGTH, raf));
+        computer.setAnnoDiProduzione(raf.readInt());
+        computer.setProcessore(readString(Computer.STRING_LENGTH, raf));
+        computer.setRamCapacity(raf.readInt());
+        computer.setStorageCapacity(raf.readInt());
+        computer.setSerialNumber(readString(Computer.SERIAL_NUMBER_LENGTH, raf));
+        return computer;
+    }
+    public Computer readRecord(int index) {
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+            raf.seek((long) Computer.RECORD_LENGTH * index);
+            return readRecord(raf);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    public List<Computer> readAllRecords() {
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+            int numberOfRecords = getNumberOfRecords();
+            if (numberOfRecords == -1)
+                return null;
+            ArrayList<Computer> computers = new ArrayList<>(numberOfRecords);
+            for (int i = 0; i < numberOfRecords; i++) {
+                computers.add(readRecord(raf));
+            }
+            return computers;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
