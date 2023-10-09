@@ -48,7 +48,7 @@ public class Application {
     }
     public List<Computer> getComputersSorted() {
         List<Computer> computers = fileManager.readAllRecords();
-        Collections.sort(computers);
+        Collections.sort(computers, (computer1, computer2) -> computer1.getMarca().compareToIgnoreCase(computer2.getMarca()));
         fileManager.overwriteRecords(computers);
         return computers;
     }
